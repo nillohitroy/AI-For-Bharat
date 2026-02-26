@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Abyssal Glass Dark Mode Palette */
+  --color-abyss-900: #050507; /* Absolute dark background */
+  --color-abyss-800: #0D0E12; /* Slightly elevated panels */
+  --color-abyss-700: #1A1C23; /* Borders and dividers */
+  
+  --color-glass-white: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* High-Octane Accents */
+  --color-neon-coral: #FF2A4D; /* For High/Critical Risk [cite: 56] */
+  --color-neon-coral-glow: rgba(255, 42, 77, 0.2);
+  
+  --color-radium-mint: #00F0FF; /* For Low Risk / Safe [cite: 61-62] */
+  --color-radium-mint-glow: rgba(0, 240, 255, 0.2);
+  
+  --color-solar-flare: #FFB300; /* For Medium Risk / Cautions [cite: 58-59] */
+
+  /* Light Mode (Clean, High-Contrast Corporate) */
+  --color-paper-100: #FAFAFA;
+  --color-paper-200: #F0F0F0;
+  --color-ink-900: #0F1115;
+}
+
+@layer base {
+  body {
+    @apply bg-paper-100 text-ink-900 transition-colors duration-500 selection:bg-radium-mint selection:text-abyss-900;
+  }
+  .dark body {
+    @apply bg-abyss-900 text-paper-100;
+  }
+}
+
+/* Custom utility class for the frosted glass panels */
+@layer utilities {
+  .glass-panel {
+    @apply bg-glass-white backdrop-blur-xl border border-glass-border shadow-2xl;
+  }
+}
