@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWebSockets } from "@/hooks/useWebSockets";
 import { ThreatCard } from "@/components/feed/ThreatCard";
 import { ThreatMessage } from "@/types/threat";
+import { ThreatModal } from "@/components/feed/ThreatModal";
 import { Activity } from "lucide-react";
 
 export default function DashboardFeed() {
@@ -66,6 +67,12 @@ export default function DashboardFeed() {
       )}
 
       {/* TODO: Add ThreatModal here when selectedThreat is active */}
+      {selectedThreat && (
+        <ThreatModal 
+          threat={selectedThreat} 
+          onClose={() => setSelectedThreat(null)} 
+        />
+      )}
     </div>
   );
 }

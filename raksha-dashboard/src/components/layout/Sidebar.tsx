@@ -13,18 +13,21 @@ export function Sidebar() {
     { name: "Live Scan Feed", href: "/dashboard", icon: Radio },
     { name: "Report a Threat", href: "/dashboard/report", icon: Mic }, // Voice/Text input [cite: 71]
     { name: "Digital Literacy", href: "/dashboard/literacy", icon: BookOpen }, // Learning module [cite: 38]
-    { name: "Guardian Portal", href: "/portal", icon: Users }, // Community Network [cite: 34]
+    { name: "Guardian Portal", href: "/dashboard/portal", icon: Users }, // Community Network [cite: 34]
   ];
 
   return (
     <aside className="w-64 h-screen border-r border-glass-border bg-paper-100 dark:bg-abyss-900/50 backdrop-blur-2xl flex flex-col transition-colors duration-500 hidden md:flex">
       {/* Brand Header */}
-      <div className="h-20 flex items-center px-6 border-b border-glass-border">
-        <Shield className="text-solar-flare mr-3" size={28} />
+      <Link 
+        href="/dashboard" 
+        className="h-20 flex items-center px-6 border-b border-glass-border group cursor-pointer transition-colors hover:bg-paper-200/50 dark:hover:bg-abyss-800/50"
+      >
+        <Shield className="text-solar-flare mr-3 group-hover:scale-110 transition-transform duration-300" size={28} />
         <h1 className="text-xl font-black tracking-wider text-ink-900 dark:text-paper-100 uppercase">
-          Raksha <span className="text-radium-mint">AI</span>
+          Raksha <span className="text-radium-mint group-hover:text-solar-flare transition-colors duration-300">AI</span>
         </h1>
-      </div>
+      </Link>
 
       {/* Navigation Links */}
       <nav className="flex-1 px-4 py-6 space-y-2">

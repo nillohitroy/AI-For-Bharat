@@ -41,3 +41,9 @@
     @apply bg-glass-white backdrop-blur-xl border border-glass-border shadow-2xl;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
