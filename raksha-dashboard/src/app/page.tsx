@@ -1,15 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { animate } from "animejs";
-import { Shield, ChevronRight, Globe, Users, Mic, Zap, BookOpen } from "lucide-react";
+import { 
+  Shield, ChevronRight, Globe, Users, Mic, Zap, BookOpen, 
+  LogOut, LayoutDashboard 
+} from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { supabase } from "@/lib/supabase";
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   
   // Animation Refs
   const heroRef = useRef(null);
@@ -17,25 +26,73 @@ export default function LandingPage() {
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const ctaRef = useRef(null);
 
+  // --- SUPABASE AUTH LISTENER ---
   useEffect(() => {
-    animate(heroRef.current, {
-      translateY: [30, 0],
-      opacity: [0, 1],
-      duration: 1200,
-      ease: "outExpo",
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      
+      // FIX: The instant Supabase verifies the email link and signs the user in, route them.
+      if (event === "SIGNED_IN") {
+        router.push("/dashboard");
+      }
+    });
+
+    // Fallback: If the URL contains an access token from the email, push to dashboard
+    if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+      router.push("/dashboard");
+    }
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  // --- DROPDOWN OUTSIDE CLICK LISTENER ---
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- HELPER FUNCTIONS ---
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      const parts = name.trim().split(" ");
+      if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      return name.substring(0, 2).toUpperCase();
+    }
+    if (email) return email.substring(0, 2).toUpperCase();
+    return "US";
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsDropdownOpen(false);
+  };
+
+  const handleCtaClick = () => {
+    if (user) router.push("/dashboard");
+    else setIsAuthModalOpen(true);
+  };
+
+  // --- SCROLL ANIMATIONS ---
   useEffect(() => {
+    animate(heroRef.current, {
+      translateY: [30, 0], opacity: [0, 1], duration: 1200, ease: "outExpo",
+    });
+
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           animate(entry.target, {
-            translateY: [50, 0],
-            opacity: [0, 1],
-            duration: 1000,
-            ease: "outQuart",
+            translateY: [50, 0], opacity: [0, 1], duration: 1000, ease: "outQuart",
           });
           observer.unobserve(entry.target); 
         }
@@ -44,46 +101,16 @@ export default function LandingPage() {
 
     if (featureTitleRef.current) observer.observe(featureTitleRef.current);
     if (ctaRef.current) observer.observe(ctaRef.current);
-    featureRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
+    featureRefs.current.forEach((ref) => { if (ref) observer.observe(ref); });
 
     return () => observer.disconnect();
   }, []);
 
   const features = [
-    {
-      icon: Globe,
-      title: "Cultural Context Analyzer",
-      description: "Proprietary AI that detects scams exploiting Indian festivals, family hierarchies, and religious sentiments that generic global security platforms miss.",
-      color: "text-radium-mint",
-      bg: "bg-radium-mint/10",
-      border: "border-radium-mint/20"
-    },
-    {
-      icon: Users,
-      title: "Community Guardian Network",
-      description: "A peer-to-peer defense system empowering trusted local users to verify threats and support less tech-savvy members of their community.",
-      color: "text-solar-flare",
-      bg: "bg-solar-flare/10",
-      border: "border-solar-flare/20"
-    },
-    {
-      icon: Mic,
-      title: "Voice-First Accessibility",
-      description: "Breaks literacy barriers by offering full functionality through voice commands and supporting 10 Indian languages.",
-      color: "text-neon-coral",
-      bg: "bg-neon-coral/10",
-      border: "border-neon-coral/20"
-    },
-    {
-      icon: BookOpen,
-      title: "Adaptive Digital Literacy",
-      description: "Converts real-time threats into personalized micro-lessons. The system assesses user skills and unlocks content as they learn.",
-      color: "text-radium-mint",
-      bg: "bg-radium-mint/10",
-      border: "border-radium-mint/20"
-    }
+    { icon: Globe, title: "Cultural Context Analyzer", description: "Proprietary AI that detects scams exploiting Indian festivals, family hierarchies, and religious sentiments that generic global security platforms miss.", color: "text-radium-mint", bg: "bg-radium-mint/10", border: "border-radium-mint/20" },
+    { icon: Users, title: "Community Guardian Network", description: "A peer-to-peer defense system empowering trusted local users to verify threats and support less tech-savvy members of their community.", color: "text-solar-flare", bg: "bg-solar-flare/10", border: "border-solar-flare/20" },
+    { icon: Mic, title: "Voice-First Accessibility", description: "Breaks literacy barriers by offering full functionality through voice commands and supporting 10 Indian languages.", color: "text-neon-coral", bg: "bg-neon-coral/10", border: "border-neon-coral/20" },
+    { icon: BookOpen, title: "Adaptive Digital Literacy", description: "Converts real-time threats into personalized micro-lessons. The system assesses user skills and unlocks content as they learn.", color: "text-radium-mint", bg: "bg-radium-mint/10", border: "border-radium-mint/20" }
   ];
 
   return (
@@ -101,29 +128,68 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 sm:gap-6">
             <ThemeToggle />
             
-            {/* NEW: Register / Sign In Trigger Buttons */}
-            <div className="hidden sm:flex items-center gap-2">
-              <button 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="px-5 py-2.5 text-sm font-bold text-ink-900 dark:text-paper-100 hover:text-radium-mint dark:hover:text-radium-mint transition-colors"
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="px-6 py-2.5 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold rounded-xl hover:scale-105 transition-transform shadow-lg"
-              >
-                Register
-              </button>
-            </div>
-            
-            {/* Mobile simplified button */}
-            <button 
-              onClick={() => setIsAuthModalOpen(true)}
-              className="sm:hidden px-4 py-2 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold rounded-lg text-sm"
-            >
-              Sign In
-            </button>
+            {/* AUTH STATE UI: Dynamic Buttons vs Profile Dropdown */}
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
+                {/* Profile Avatar Trigger */}
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-10 h-10 rounded-full bg-radium-mint text-abyss-900 font-black flex items-center justify-center hover:scale-105 transition-all shadow-md border-2 border-transparent hover:border-solar-flare focus:outline-none"
+                >
+                  {getInitials(user.user_metadata?.full_name, user.email)}
+                </button>
+
+                {/* Glassmorphism Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-paper-100 dark:bg-abyss-800 border border-glass-border rounded-xl shadow-2xl py-2 flex flex-col z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-glass-border mb-1">
+                      <p className="text-sm font-bold text-ink-900 dark:text-paper-100 truncate">
+                        {user.user_metadata?.full_name || "Guardian"}
+                      </p>
+                      <p className="text-xs text-ink-900/60 dark:text-paper-100/60 truncate mt-0.5">
+                        {user.email}
+                      </p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => router.push('/dashboard')}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-ink-900 dark:text-paper-100 hover:bg-paper-200 dark:hover:bg-abyss-900 transition-colors w-full text-left font-medium"
+                    >
+                      <LayoutDashboard size={16} className="text-radium-mint" /> 
+                      Command Center
+                    </button>
+                    
+                    <button 
+                      onClick={handleSignOut}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-neon-coral hover:bg-neon-coral/10 transition-colors w-full text-left font-medium mt-1"
+                    >
+                      <LogOut size={16} /> 
+                      Disconnect
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // LOGGED OUT STATE
+              <>
+                <div className="hidden sm:flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="px-6 py-2.5 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold rounded-xl hover:scale-105 transition-transform shadow-lg"
+                  >
+                    Register
+                  </button>
+                </div>
+                
+                {/* Mobile simplified button */}
+                <button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="sm:hidden px-4 py-2 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold rounded-lg text-sm"
+                >
+                  Sign In
+                </button>
+              </>
+            )}
           </div>
         </nav>
 
@@ -150,13 +216,13 @@ export default function LandingPage() {
               Bridging digital literacy gaps to protect communities from sophisticated social engineering and localized financial threats.
             </p>
             
-            {/* Updated to open auth modal instead of skipping auth */}
+            {/* Dynamic CTA Button */}
             <button
-              onClick={() => setIsAuthModalOpen(true)}
+              onClick={handleCtaClick}
               className="group relative px-8 py-4 md:px-10 md:py-5 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold text-lg rounded-2xl shadow-2xl transition-all hover:scale-[1.02]"
             >
               <span className="flex items-center gap-3">
-                Initialize Command Center
+                {user ? "Enter Command Center" : "Initialize Command Center"}
                 <ChevronRight className="group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
@@ -179,11 +245,7 @@ export default function LandingPage() {
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
-                  <div 
-                    key={index} 
-                    ref={(el) => { featureRefs.current[index] = el; }}
-                    className="opacity-0"
-                  >
+                  <div key={index} ref={(el) => { featureRefs.current[index] = el; }} className="opacity-0">
                     <GlassPanel className={cn("h-full hover:-translate-y-2 transition-transform duration-500", feature.border)}>
                       <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6", feature.bg, feature.color)}>
                         <Icon size={28} />
@@ -210,7 +272,7 @@ export default function LandingPage() {
               Ready to deploy the <br/>Guardian Network?
             </h2>
             <button
-              onClick={() => setIsAuthModalOpen(true)}
+              onClick={handleCtaClick}
               className="px-10 py-5 bg-radium-mint text-abyss-900 font-bold text-lg rounded-2xl shadow-[0_0_30px_rgba(0,240,255,0.3)] hover:shadow-[0_0_50px_rgba(0,240,255,0.5)] transition-all hover:scale-105"
             >
               Access Live Demo
