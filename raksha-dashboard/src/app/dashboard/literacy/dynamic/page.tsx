@@ -11,7 +11,7 @@ function LiteracyModuleContent() {
   const router = useRouter();
   const threatId = searchParams.get("threat_id");
 
-  const [moduleData, setModuleData] = useState(null);
+  const [moduleData, setModuleData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
 
@@ -97,7 +97,7 @@ function LiteracyModuleContent() {
 
         {/* Steps */}
         <div className="grid gap-4">
-          {moduleData.steps?.map((step) => (
+          {moduleData.steps?.map((step: any) => (
             <div key={step.stepNumber} className="bg-paper-200/10 dark:bg-abyss-900/20 p-6 rounded-2xl border border-glass-border flex gap-6">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-radium-mint text-abyss-900 flex items-center justify-center font-black text-xl">
                 {step.stepNumber}

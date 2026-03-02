@@ -21,27 +21,46 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false); 
   
-  const overlayRef = useRef(null);
-  const modalRef = useRef(null);
+  // Explicitly tell TypeScript these refs will attach to div elements
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
       setIsSuccess(false); 
-      animate(overlayRef.current, { opacity: [0, 1], duration: 300, ease: "linear" });
-      animate(modalRef.current, {
-        scale: [0.8, 1],
-        opacity: [0, 1],
-        translateY: [20, 0],
-        duration: 600,
-        ease: "outElastic(1, .6)"
-      });
+      
+      // Safe check for overlay
+      if (overlayRef.current) {
+        animate(overlayRef.current, { opacity: [0, 1], duration: 300, ease: "linear" });
+      }
+      
+      // Safe check for modal
+      if (modalRef.current) {
+        animate(modalRef.current, {
+          scale: [0.8, 1],
+          opacity: [0, 1],
+          translateY: [20, 0],
+          duration: 600,
+          ease: "outElastic(1, .6)"
+        });
+      }
     }
   }, [isOpen]);
 
   const handleClose = () => {
-    animate(modalRef.current, { scale: [1, 0.95], opacity: [1, 0], duration: 200, ease: "inQuart" });
-    animate(overlayRef.current, { opacity: [1, 0], duration: 200, ease: "linear", onComplete: onClose });
+    // Safe check for modal close animation
+    if (modalRef.current) {
+      animate(modalRef.current, { scale: [1, 0.95], opacity: [1, 0], duration: 200, ease: "inQuart" });
+    }
+    
+    // Safe check for overlay close animation
+    if (overlayRef.current) {
+      animate(overlayRef.current, { opacity: [1, 0], duration: 200, ease: "linear", onComplete: onClose });
+    } else {
+      // Fallback just in case the ref is instantly gone
+      onClose();
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -56,7 +75,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           password,
           options: { 
             data: { full_name: fullName },
-            // FIX: Point this to the root URL so the Landing Page can catch the login token
             emailRedirectTo: `${window.location.origin}/` 
           }
         });

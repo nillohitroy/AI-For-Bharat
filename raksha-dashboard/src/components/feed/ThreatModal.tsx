@@ -13,8 +13,9 @@ interface ThreatModalProps {
 }
 
 export function ThreatModal({ threat, onClose }: ThreatModalProps) {
-  const overlayRef = useRef(null);
-  const modalRef = useRef(null);
+  // Explicitly type the refs
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const isHighRisk = threat.riskScore === "HIGH";
 
@@ -25,34 +26,50 @@ export function ThreatModal({ threat, onClose }: ThreatModalProps) {
   };
 
   useEffect(() => {
-    animate(overlayRef.current, {
-      opacity: [0, 1],
-      duration: 300,
-      ease: "linear"
-    });
+    // Safe check for overlay animation
+    if (overlayRef.current) {
+      animate(overlayRef.current, {
+        opacity: [0, 1],
+        duration: 300,
+        ease: "linear"
+      });
+    }
 
-    animate(modalRef.current, {
-      scale: [0.8, 1],
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 600,
-      ease: "outElastic(1, .6)"
-    });
+    // Safe check for modal animation
+    if (modalRef.current) {
+      animate(modalRef.current, {
+        scale: [0.8, 1],
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 600,
+        ease: "outElastic(1, .6)"
+      });
+    }
   }, []);
 
   const handleClose = () => {
-    animate(modalRef.current, {
-      scale: [1, 0.95],
-      opacity: [1, 0],
-      duration: 200,
-      ease: "inQuart",
-      onComplete: onClose
-    });
-    animate(overlayRef.current, {
-      opacity: [1, 0],
-      duration: 200,
-      ease: "linear"
-    });
+    // Safe check for modal close animation
+    if (modalRef.current) {
+      animate(modalRef.current, {
+        scale: [1, 0.95],
+        opacity: [1, 0],
+        duration: 200,
+        ease: "inQuart"
+      });
+    }
+    
+    // Safe check for overlay close animation and triggering onClose
+    if (overlayRef.current) {
+      animate(overlayRef.current, {
+        opacity: [1, 0],
+        duration: 200,
+        ease: "linear",
+        onComplete: onClose
+      });
+    } else {
+      // Fallback in case the ref is missing
+      onClose();
+    }
   };
 
   return (
@@ -64,7 +81,7 @@ export function ThreatModal({ threat, onClose }: ThreatModalProps) {
         ref={modalRef}
         className={cn(
           "relative w-full max-w-lg p-6 sm:p-8 rounded-3xl opacity-0 shadow-2xl border",
-          "max-h-[90vh] overflow-y-auto", // <-- FIX: Added max-height and vertical scrolling
+          "max-h-[90vh] overflow-y-auto",
           isHighRisk
             ? "bg-abyss-800 border-neon-coral shadow-[0_0_50px_rgba(255,42,77,0.15)]"
             : "bg-abyss-800 border-glass-border"

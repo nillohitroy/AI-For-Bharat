@@ -6,5 +6,6 @@ export interface ThreatMessage {
   content: string;
   riskScore: RiskLevel;
   timestamp: string;
-  culturalContextFlag?: string; // E.g., "Diwali Offer Scam" or "Family Emergency"
+  culturalContextFlag?: string;
+  peerName?: string;
 }

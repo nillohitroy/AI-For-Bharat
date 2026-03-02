@@ -35,7 +35,7 @@ export default function LandingPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       
-      // FIX: The instant Supabase verifies the email link and signs the user in, route them.
+      // The instant Supabase verifies the email link and signs the user in, route them.
       if (event === "SIGNED_IN") {
         router.push("/dashboard");
       }
@@ -83,10 +83,14 @@ export default function LandingPage() {
 
   // --- SCROLL ANIMATIONS ---
   useEffect(() => {
-    animate(heroRef.current, {
-      translateY: [30, 0], opacity: [0, 1], duration: 1200, ease: "outExpo",
-    });
+    // 1. Initial Hero Animation
+    if (heroRef.current) {
+      animate(heroRef.current, {
+        translateY: [30, 0], opacity: [0, 1], duration: 1200, ease: "outExpo",
+      });
+    }
 
+    // 2. Scroll Observer Animations
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -104,7 +108,7 @@ export default function LandingPage() {
     featureRefs.current.forEach((ref) => { if (ref) observer.observe(ref); });
 
     return () => observer.disconnect();
-  }, []);
+  }, []); // <--- This safely closes the entire animation block
 
   const features = [
     { icon: Globe, title: "Cultural Context Analyzer", description: "Proprietary AI that detects scams exploiting Indian festivals, family hierarchies, and religious sentiments that generic global security platforms miss.", color: "text-radium-mint", bg: "bg-radium-mint/10", border: "border-radium-mint/20" },
@@ -282,7 +286,7 @@ export default function LandingPage() {
 
         {/* Simple Footer */}
         <footer className="py-8 border-t border-glass-border text-center text-sm font-mono text-ink-900/40 dark:text-paper-100/40">
-          <p>AI for Bharat Hackathon &bull; Powered by AWS</p>
+          <p>Raksha AI &bull; AI for Bharat Hackathon &bull; Powered by AWS</p>
         </footer>
       </div>
 

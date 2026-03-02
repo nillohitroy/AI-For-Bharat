@@ -12,34 +12,47 @@ interface VoiceRecorderProps {
 }
 
 export function VoiceRecorder({ isRecording, onStart, onStop }: VoiceRecorderProps) {
-  const rippleRef1 = useRef(null);
-  const rippleRef2 = useRef(null);
+  // Explicitly type the refs as HTMLDivElements
+  const rippleRef1 = useRef<HTMLDivElement>(null);
+  const rippleRef2 = useRef<HTMLDivElement>(null);
   const animationRef1 = useRef<any>(null);
   const animationRef2 = useRef<any>(null);
 
   useEffect(() => {
     if (isRecording) {
-      animationRef1.current = animate(rippleRef1.current, {
-        scale: [1, 2.5],
-        opacity: [0.8, 0],
-        duration: 1500,
-        loop: true,
-        ease: "outSine"
-      });
-      animationRef2.current = animate(rippleRef2.current, {
-        scale: [1, 2],
-        opacity: [0.5, 0],
-        duration: 1500,
-        delay: 400,
-        loop: true,
-        ease: "outSine"
-      });
+      // Safe check before animating ripple 1
+      if (rippleRef1.current) {
+        animationRef1.current = animate(rippleRef1.current, {
+          scale: [1, 2.5],
+          opacity: [0.8, 0],
+          duration: 1500,
+          loop: true,
+          ease: "outSine"
+        });
+      }
+      
+      // Safe check before animating ripple 2
+      if (rippleRef2.current) {
+        animationRef2.current = animate(rippleRef2.current, {
+          scale: [1, 2],
+          opacity: [0.5, 0],
+          duration: 1500,
+          delay: 400,
+          loop: true,
+          ease: "outSine"
+        });
+      }
     } else {
       if (animationRef1.current) animationRef1.current.pause();
       if (animationRef2.current) animationRef2.current.pause();
-      // Reset scales
-      if (rippleRef1.current) (rippleRef1.current as HTMLElement).style.transform = 'scale(1)';
-      if (rippleRef2.current) (rippleRef2.current as HTMLElement).style.transform = 'scale(1)';
+      
+      // Reset scales safely
+      if (rippleRef1.current) {
+        rippleRef1.current.style.transform = 'scale(1)';
+      }
+      if (rippleRef2.current) {
+        rippleRef2.current.style.transform = 'scale(1)';
+      }
     }
   }, [isRecording]);
 
