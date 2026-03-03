@@ -2,26 +2,11 @@ import os
 import json
 import time
 from fastapi import APIRouter, HTTPException, Query
-from dotenv import load_dotenv, find_dotenv
-import google.generativeai as genai
-
 from app.services.ai_engine import generate_contextual_module
+from app.services.bedrock_engine import invoke_bedrock_json, BEDROCK_ACTIVE
 from app.services.database import supabase
 
-# Force Python to find the .env file!
-load_dotenv(find_dotenv())
-
 router = APIRouter()
-
-gemini_key = os.getenv("GEMINI_API_KEY")
-
-if gemini_key:
-    genai.configure(api_key=gemini_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    AI_CONNECTED = True
-else:
-    print("⚠️ Gemini initialization failed: Missing API Key")
-    AI_CONNECTED = False
 
 # --- QUIZ GENERATOR ---
 @router.get("/generate-quiz")
@@ -29,8 +14,8 @@ async def generate_quiz(
     title: str = Query(..., description="The specific title of the lesson"),
     category: str = Query(..., description="The category of the threat")
 ):
-    if not AI_CONNECTED:
-        print("⚠️ Warning: AI not connected. Using mock quiz.")
+    if not BEDROCK_ACTIVE:
+        print("⚠️ Warning: AWS Bedrock not connected. Using mock quiz.")
         return _mock_quiz_generator(title, category)
 
     prompt = f"""
@@ -39,7 +24,7 @@ async def generate_quiz(
     
     Then, create a multiple-choice question testing the user's ability to identify the psychological trick or technical red flag. Provide exactly 4 options.
     
-    Return ONLY a valid JSON object matching this exact structure:
+    Return ONLY a valid JSON object matching this exact structure (no markdown):
     {{
         "scenario": "A 2-3 sentence realistic scenario...",
         "question": "What is the primary red flag here?",
@@ -48,29 +33,20 @@ async def generate_quiz(
     }}
     """
     
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.7
-            )
-        )
-        return json.loads(response.text)
-        
-    except Exception as e:
-        print(f"⚠️ Gemini API Error: {e}")
+    result = await invoke_bedrock_json(prompt)
+    if "error" in result:
         print("🔄 Falling back to mock quiz so the UI doesn't crash...")
         return _mock_quiz_generator(title, category)
-
+        
+    return result
 
 # --- SYLLABUS GENERATOR (Infinite Modules) ---
 @router.get("/generate-syllabus")
 async def generate_new_module(
     current_xp: int = Query(..., description="User's current XP to scale difficulty")
 ):
-    if not AI_CONNECTED:
-        print("⚠️ Warning: AI not connected. Using mock syllabus.")
+    if not BEDROCK_ACTIVE:
+        print("⚠️ Warning: AWS Bedrock not connected. Using mock syllabus.")
         return _mock_syllabus_generator(current_xp)
 
     prompt = f"""
@@ -78,7 +54,7 @@ async def generate_new_module(
     Generate one brand new, more advanced module for them. 
     Topics should be advanced (e.g., SIM Swapping, UPI Intent Scams, AI Voice Scams, Fake Charity).
     
-    Return ONLY a JSON object matching this exact structure:
+    Return ONLY a JSON object matching this exact structure (no markdown):
     {{
         "title": "A short, catchy module title",
         "category": "Broad Category (e.g., AI Scams)",
@@ -87,28 +63,21 @@ async def generate_new_module(
     }}
     """
 
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.7
-            )
-        )
-        new_module = json.loads(response.text)
-        new_module["id"] = int(time.time())
-        new_module["requiredXp"] = current_xp
-        
-        return new_module
-        
-    except Exception as e:
-        print(f"⚠️ Syllabus Generation Error: {e}")
+    result = await invoke_bedrock_json(prompt)
+    if "error" in result:
+        print("🔄 Falling back to mock syllabus...")
         return _mock_syllabus_generator(current_xp)
-
+        
+    result["id"] = int(time.time())
+    result["requiredXp"] = current_xp
+    return result
 
 # --- DYNAMIC CONTEXTUAL MODULE GENERATOR ---
 @router.get("/contextual")
 async def get_literacy_module(threat_id: str):
+    if supabase is None:
+        raise HTTPException(status_code=500, detail="Database connection is offline.")
+
     threat_query = supabase.table("threats").select("*").eq("id", threat_id).execute()
     if not threat_query.data:
         return {"error": "Threat not found"}

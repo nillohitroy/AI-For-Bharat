@@ -122,8 +122,12 @@ export default function ReportThreat() {
           Help train the AI. Paste text or record a voice note of suspicious calls/messages.
         </p>
       </div>
+      
+      {/* Wrapper div holds the starting opacity-0 for the animation */}
       <div ref={formRef} className="opacity-0">
-        <GlassPanel className="opacity-0 border-neon-coral/20 p-6 sm:p-8">
+        
+        {/* FIX: Removed opacity-0 from GlassPanel so it doesn't stay invisible forever */}
+        <GlassPanel className="border-neon-coral/20 p-6 sm:p-8">
           {isSuccess ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <CheckCircle className="success-icon text-radium-mint w-20 h-20 mb-4" />

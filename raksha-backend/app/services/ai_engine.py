@@ -1,27 +1,10 @@
-import os
 import json
-from dotenv import load_dotenv, find_dotenv
-import google.generativeai as genai
-
-# Actively walk up the folder tree to locate the .env file in the root!
-load_dotenv(find_dotenv())
-
-gemini_key = os.getenv("GEMINI_API_KEY")
-
-if gemini_key:
-    print("✅ .env file located and Gemini API Key loaded successfully!")
-    genai.configure(api_key=gemini_key)
-    # Using Gemini 1.5 Flash for high-speed, free inference
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    AI_ACTIVE = True
-else:
-    print("❌ ERROR: Cannot find GEMINI_API_KEY in your .env file.")
-    AI_ACTIVE = False
+from app.services.bedrock_engine import invoke_bedrock_json, BEDROCK_ACTIVE
 
 async def analyze_cultural_threat(sender: str, content: str) -> dict:
-    """Analyzes a message for localized Indian scam patterns using Gemini."""
+    """Analyzes a message for localized Indian scam patterns using AWS Bedrock."""
     
-    if not AI_ACTIVE:
+    if not BEDROCK_ACTIVE:
         return _get_mock_analysis(content)
 
     prompt = f"""
@@ -36,7 +19,7 @@ async def analyze_cultural_threat(sender: str, content: str) -> dict:
     3. Calculate confidence: 0-100.
     4. Provide a brief explanation.
     
-    CRITICAL INSTRUCTION: Return ONLY a valid JSON object.
+    CRITICAL INSTRUCTION: Return ONLY a valid JSON object. Do not include markdown formatting or extra text.
     {{
         "riskScore": "HIGH",
         "culturalContextFlag": "UPI Fraud",
@@ -45,20 +28,12 @@ async def analyze_cultural_threat(sender: str, content: str) -> dict:
     }}
     """
 
-    try:
-        # Gemini's native JSON mode guarantees perfect formatting
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.3
-            )
-        )
-        return json.loads(response.text)
-
-    except Exception as e:
-        print(f"❌ AI Engine Error: {e}")
+    result = await invoke_bedrock_json(prompt)
+    if "error" in result:
+        print(f"❌ AI Engine Fallback Triggered: {result['error']}")
         return _get_mock_analysis(content)
+        
+    return result
 
 def _get_mock_analysis(content: str):
     """Fallback logic if AI is offline."""
@@ -67,14 +42,14 @@ def _get_mock_analysis(content: str):
         "riskScore": "HIGH" if is_suspicious else "LOW",
         "culturalContextFlag": "Localized Pattern Detected",
         "confidence": 85,
-        "explanation": "Analyzed via local pattern matching (AI Offline)."
+        "explanation": "Analyzed via local pattern matching (AWS Bedrock Offline)."
     }
 
 async def generate_contextual_module(scam_message: str) -> dict:
     """Generates a custom digital literacy lesson based on the EXACT scam text."""
     
-    if not AI_ACTIVE:
-        return {"error": "AI Engine is offline."}
+    if not BEDROCK_ACTIVE:
+        return {"error": "AWS Bedrock is offline."}
 
     prompt = f"""
     You are Raksha AI, an expert cybersecurity educator in India.
@@ -82,7 +57,7 @@ async def generate_contextual_module(scam_message: str) -> dict:
     
     Create a specific, 3-step digital literacy module teaching the user how THIS SPECIFIC message tricks them.
     
-    CRITICAL INSTRUCTION: Return ONLY a valid JSON object with this exact structure:
+    CRITICAL INSTRUCTION: Return ONLY a valid JSON object with this exact structure (no markdown):
     {{
         "title": "Dissecting the Scam",
         "overview": "A brief 2-sentence explanation of how this specific message manipulates the victim.",
@@ -95,16 +70,9 @@ async def generate_contextual_module(scam_message: str) -> dict:
     }}
     """
 
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.5
-            )
-        )
-        return json.loads(response.text)
-
-    except Exception as e:
-        print(f"❌ Contextual Module Generation Error: {e}")
+    result = await invoke_bedrock_json(prompt)
+    if "error" in result:
+        print(f"❌ Contextual Module Generation Error: {result['error']}")
         return {"error": "Failed to generate contextual module."}
+        
+    return result

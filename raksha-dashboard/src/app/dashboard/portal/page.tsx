@@ -205,12 +205,12 @@ export default function GuardianPortal() {
                          onClick={() => handleAnalyze(selectedItem)}
                          className="w-full py-4 mt-4 bg-radium-mint text-abyss-900 font-black rounded-xl hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(0,240,255,0.3)] flex items-center justify-center gap-2"
                        >
-                         Trigger Gemini Threat Analysis
+                         Trigger Raksha Threat Analysis
                        </button>
                     ) : isAnalyzing ? (
                       <div className="py-8 flex flex-col items-center justify-center text-center bg-abyss-900/40 rounded-xl border border-glass-border">
                         <Loader2 className="w-8 h-8 text-radium-mint animate-spin mb-4" />
-                        <h3 className="font-bold text-radium-mint">Gemini is dissecting the threat...</h3>
+                        <h3 className="font-bold text-radium-mint">Raksha is dissecting the threat...</h3>
                         <p className="text-xs opacity-50 mt-1 uppercase tracking-widest">Extracting psychological hooks</p>
                       </div>
                     ) : analysisResult ? (
