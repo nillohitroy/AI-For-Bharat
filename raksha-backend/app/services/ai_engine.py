@@ -15,11 +15,11 @@ async def analyze_cultural_threat(sender: str, content: str) -> dict:
     
     Tasks:
     1. Determine riskScore: 'HIGH' (Clear scam), 'MEDIUM' (Suspicious/Needs review), 'LOW' (Likely safe).
-    2. Identify culturalContextFlag: (e.g., 'UPI Fraud', 'Aadhar Panic', 'Diwali Offer Trap', 'KYC Scam', 'Job Fraud').
+    2. Identify culturalContextFlag: (e.g., 'UPI Fraud', 'Aadhar Panic', 'Diwali Offer Trap', 'KYC Scam', 'Electricity Bill Fraud', 'Job Fraud').
     3. Calculate confidence: 0-100.
     4. Provide a brief explanation.
     
-    CRITICAL INSTRUCTION: Return ONLY a valid JSON object. Do not include markdown formatting or extra text.
+    CRITICAL INSTRUCTION: You may use <think> tags for your internal reasoning, but your FINAL output MUST be ONLY a valid JSON object matching this exact structure. Do not include markdown formatting or extra text outside the JSON.
     {{
         "riskScore": "HIGH",
         "culturalContextFlag": "UPI Fraud",
@@ -37,7 +37,7 @@ async def analyze_cultural_threat(sender: str, content: str) -> dict:
 
 def _get_mock_analysis(content: str):
     """Fallback logic if AI is offline."""
-    is_suspicious = any(word in content.lower() for word in ["kyc", "block", "offer", "winner", "otp", "vpa"])
+    is_suspicious = any(word in content.lower() for word in ["kyc", "block", "offer", "winner", "otp", "vpa", "wbsedcl"])
     return {
         "riskScore": "HIGH" if is_suspicious else "LOW",
         "culturalContextFlag": "Localized Pattern Detected",
@@ -57,7 +57,7 @@ async def generate_contextual_module(scam_message: str) -> dict:
     
     Create a specific, 3-step digital literacy module teaching the user how THIS SPECIFIC message tricks them.
     
-    CRITICAL INSTRUCTION: Return ONLY a valid JSON object with this exact structure (no markdown):
+    CRITICAL INSTRUCTION: You may use <think> tags for your internal reasoning, but your FINAL output MUST be ONLY a valid JSON object with this exact structure (no markdown outside the JSON):
     {{
         "title": "Dissecting the Scam",
         "overview": "A brief 2-sentence explanation of how this specific message manipulates the victim.",
