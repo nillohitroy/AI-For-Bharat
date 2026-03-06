@@ -30,7 +30,7 @@ markdown-it-py==4.0.0
 mdurl==0.1.2
 mmh3==5.2.0
 multidict==6.7.1
-packaging @ file:///home/task_176104874243446/conda-bld/packaging_1761049080023/work
+packaging==23.2
 postgrest==2.28.0
 propcache==0.4.1
 proto-plus==1.27.1
