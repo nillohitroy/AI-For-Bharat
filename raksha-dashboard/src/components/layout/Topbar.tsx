@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, User, Settings, LogOut, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 export function Topbar() {
   const [user, setUser] = useState<any>(null);

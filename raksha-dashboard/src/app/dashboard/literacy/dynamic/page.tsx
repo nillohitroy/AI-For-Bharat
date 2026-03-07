@@ -20,7 +20,7 @@ function LiteracyModuleContent() {
 
     const generateModule = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/literacy/contextual?threat_id=${threatId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/literacy/contextual?threat_id=${threatId}`);
         const data = await res.json();
         setModuleData(data);
       } catch (error) {

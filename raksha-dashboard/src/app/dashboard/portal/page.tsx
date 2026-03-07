@@ -82,7 +82,7 @@ export default function GuardianPortal() {
 
     try {
       // Call your fast Gemini-powered Python backend
-      const res = await fetch(`http://localhost:8000/api/literacy/contextual?threat_id=${threat.id}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/literacy/contextual?threat_id=${threat.id}`);
       
       if (!res.ok) throw new Error("Failed to generate analysis");
       

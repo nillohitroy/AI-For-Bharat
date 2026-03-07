@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { animate } from "animejs";
 import {
   Shield, ChevronRight, Globe, Users, Mic, Zap, BookOpen,
-  LogOut, LayoutDashboard, Smartphone, Download
+  LogOut, LayoutDashboard, Smartphone, Download, AlertTriangle
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false); // <-- ADDED DOWNLOAD STATE
   const [user, setUser] = useState<any>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,13 +36,11 @@ export default function LandingPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
 
-      // The instant Supabase verifies the email link and signs the user in, route them.
       if (event === "SIGNED_IN") {
         router.push("/dashboard");
       }
     });
 
-    // Fallback: If the URL contains an access token from the email, push to dashboard
     if (typeof window !== "undefined" && window.location.hash.includes("access_token")) {
       router.push("/dashboard");
     }
@@ -83,14 +82,12 @@ export default function LandingPage() {
 
   // --- SCROLL ANIMATIONS ---
   useEffect(() => {
-    // 1. Initial Hero Animation
     if (heroRef.current) {
       animate(heroRef.current, {
         translateY: [30, 0], opacity: [0, 1], duration: 1200, ease: "outExpo",
       });
     }
 
-    // 2. Scroll Observer Animations
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -108,7 +105,7 @@ export default function LandingPage() {
     featureRefs.current.forEach((ref) => { if (ref) observer.observe(ref); });
 
     return () => observer.disconnect();
-  }, []); // <--- This safely closes the entire animation block
+  }, []);
 
   const features = [
     { icon: Globe, title: "Cultural Context Analyzer", description: "Proprietary AI that detects scams exploiting Indian festivals, family hierarchies, and religious sentiments that generic global security platforms miss.", color: "text-radium-mint", bg: "bg-radium-mint/10", border: "border-radium-mint/20" },
@@ -132,10 +129,8 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 sm:gap-6">
             <ThemeToggle />
 
-            {/* AUTH STATE UI: Dynamic Buttons vs Profile Dropdown */}
             {user ? (
               <div className="relative" ref={dropdownRef}>
-                {/* Profile Avatar Trigger */}
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-10 h-10 rounded-full bg-radium-mint text-abyss-900 font-black flex items-center justify-center hover:scale-105 transition-all shadow-md border-2 border-transparent hover:border-solar-flare focus:outline-none"
@@ -143,7 +138,6 @@ export default function LandingPage() {
                   {getInitials(user.user_metadata?.full_name, user.email)}
                 </button>
 
-                {/* Glassmorphism Dropdown Menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-paper-100 dark:bg-abyss-800 border border-glass-border rounded-xl shadow-2xl py-2 flex flex-col z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="px-4 py-3 border-b border-glass-border mb-1">
@@ -174,7 +168,6 @@ export default function LandingPage() {
                 )}
               </div>
             ) : (
-              // LOGGED OUT STATE
               <>
                 <div className="hidden sm:flex items-center gap-2">
                   <button
@@ -184,8 +177,6 @@ export default function LandingPage() {
                     Register
                   </button>
                 </div>
-
-                {/* Mobile simplified button */}
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
                   className="sm:hidden px-4 py-2 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold rounded-lg text-sm"
@@ -220,7 +211,6 @@ export default function LandingPage() {
               Bridging digital literacy gaps to protect communities from sophisticated social engineering and localized financial threats.
             </p>
 
-            {/* Dynamic CTA Button */}
             <button
               onClick={handleCtaClick}
               className="group relative px-8 py-4 md:px-10 md:py-5 bg-ink-900 dark:bg-paper-100 text-paper-100 dark:text-ink-900 font-bold text-lg rounded-2xl shadow-2xl transition-all hover:scale-[1.02]"
@@ -285,13 +275,14 @@ export default function LandingPage() {
                 Get real-time AI protection on your phone. Download the Raksha Android app to automatically scan incoming SMS messages for phishing links and scams.
               </p>
 
-              <a 
-                href="#coming-soon" 
+              {/* UPDATED: Download Trigger Button */}
+              <button 
+                onClick={() => setIsDownloadModalOpen(true)}
                 className="inline-flex items-center justify-center gap-3 px-8 py-4 font-bold text-lg rounded-xl text-abyss-900 bg-radium-mint hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_40px_rgba(0,240,255,0.5)]"
               >
                 <Download size={24} />
-                Download APK (Coming Soon)
-              </a>
+                Download APK
+              </button>
               
               <p className="text-sm font-medium text-ink-900/50 dark:text-paper-100/50 mt-6">
                 *Requires Android 8.0+. SMS scanning requires explicit user permission.
@@ -316,17 +307,64 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Simple Footer */}
         <footer className="py-8 border-t border-glass-border text-center text-sm font-mono text-ink-900/40 dark:text-paper-100/40">
           <p>Raksha AI &bull; AI for Bharat Hackathon &bull; Powered by AWS</p>
         </footer>
       </div>
 
-      {/* Render the Auth Modal at the root level */}
+      {/* Render the Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
+
+      {/* NEW: Download Instruction Modal */}
+      {isDownloadModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-abyss-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-paper-100 dark:bg-abyss-800 border-2 border-radium-mint/50 rounded-2xl max-w-md w-full p-6 text-left shadow-[0_0_50px_rgba(0,240,255,0.15)] relative">
+            
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="text-solar-flare w-8 h-8" />
+              <h3 className="text-2xl font-black text-ink-900 dark:text-paper-100">
+                Before you install...
+              </h3>
+            </div>
+            
+            <p className="text-ink-900/70 dark:text-paper-100/70 text-sm mb-6 leading-relaxed">
+              Because this is an exclusive hackathon build and not on the Play Store yet, Google Play Protect might try to block it. Here is the 10-second bypass:
+            </p>
+
+            <div className="bg-paper-200 dark:bg-abyss-900 p-4 rounded-xl mb-6 border border-glass-border">
+              <ol className="list-decimal list-inside text-ink-900 dark:text-paper-100 space-y-3 text-sm font-medium">
+                <li>Download and open the APK file below.</li>
+                <li>If prompted, tap <strong>Settings</strong> and allow installations from this source.</li>
+                <li>When the Play Protect warning appears, tap the tiny <strong className="text-radium-mint">More details</strong> button.</li>
+                <li>Tap <strong className="text-neon-coral">Install anyway (unsafe)</strong>.</li>
+              </ol>
+            </div>
+
+            <div className="flex flex-col space-y-3">
+              {/* THE ACTUAL DOWNLOAD LINK */}
+              <a
+                href="/raksha-release.apk"
+                download="Raksha_AI.apk"
+                onClick={() => setIsDownloadModalOpen(false)}
+                className="flex items-center justify-center gap-2 bg-radium-mint text-abyss-900 text-center font-bold py-3 px-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]"
+              >
+                <Download size={20} />
+                Acknowledge & Download
+              </a>
+              
+              <button
+                onClick={() => setIsDownloadModalOpen(false)}
+                className="text-ink-900/60 dark:text-paper-100/60 hover:text-ink-900 dark:hover:text-paper-100 py-2 text-sm font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

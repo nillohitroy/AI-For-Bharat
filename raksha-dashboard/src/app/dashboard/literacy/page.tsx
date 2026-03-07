@@ -63,7 +63,7 @@ export default function LiteracyModule() {
     
     try {
       console.log("Ceiling hit. Requesting AI to generate next-gen module...");
-      const res = await fetch(`http://localhost:8000/api/literacy/generate-syllabus?current_xp=${currentXp}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/literacy/generate-syllabus?current_xp=${currentXp}`);
       
       if (res.ok) {
         const newModule = await res.json();
@@ -90,7 +90,7 @@ export default function LiteracyModule() {
     setAiState("generating");
     
     try {
-      const res = await fetch(`http://localhost:8000/api/literacy/generate-quiz?title=${encodeURIComponent(lesson.title)}&category=${encodeURIComponent(lesson.category)}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/literacy/generate-quiz?title=${encodeURIComponent(lesson.title)}&category=${encodeURIComponent(lesson.category)}`);
       if (!res.ok) throw new Error("AI generation failed");
       
       const data = await res.json();
