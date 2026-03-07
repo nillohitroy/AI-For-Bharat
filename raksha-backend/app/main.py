@@ -7,7 +7,7 @@ app = FastAPI(title="Raksha AI Core Engine")
 # Enable CORS for the Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://master.d1lr4tfat2cuva.amplifyapp.com/"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
