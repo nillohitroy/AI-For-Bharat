@@ -123,7 +123,7 @@ Open your terminal and run the following commands to set up the Python environme
 ```bash
 # Clone the repository and navigate to the backend directory
 git clone https://github.com/nillohitroy/AI-For-Bharat.git
-cd AI-For-Bharat/backend
+cd AI-For-Bharat/raksha-backend
 
 # Create a virtual environment
 python -m venv venv
@@ -155,7 +155,7 @@ Open a new terminal window and run the following commands to install Node packag
 
 ```bash
 # Navigate to the frontend directory  
-cd AI-For-Bharat/frontend
+cd AI-For-Bharat/raksha-dashboard
 
 # Install all required Node.js dependencies  
 npm install
